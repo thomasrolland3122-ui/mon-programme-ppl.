@@ -1,4 +1,71 @@
 <!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#10151d"><title>Mon programme PPL</title><style>body{font-family:system-ui;background:#10151d;color:#f3f5f8;margin:0;padding:18px;max-width:760px;margin:auto}h1{font-size:26px}button,input{font:inherit}button{border:1px solid #475569;border-radius:12px;background:#243244;color:white;padding:11px;cursor:pointer}.active{background:#2878bc}nav{display:flex;gap:7px;flex-wrap:wrap}.exercise{display:flex;align-items:center;gap:12px;background:#1b2533;border-radius:13px;margin:10px 0;padding:12px}.exercise label{flex:1}.exercise input[type=checkbox]{width:25px;height:25px;accent-color:#36a47d}.exercise small{display:block;color:#b6c5d7;margin-top:5px}.exercise input[type=number]{width:65px;background:#10151d;color:white;border:1px solid #526176;border-radius:7px;padding:7px}.thumb{width:70px;height:64px;border-radius:8px;background:#344456;display:flex;align-items:center;justify-content:center;font-size:25px;flex-shrink:0}.actions{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0}p{color:#b6c5d7}#history>div{padding:9px;border-bottom:1px solid #38475a}a{color:#8ac8ff} .hint{font-size:12px}</style></head><body><h1>🏋️ Mon programme PPL</h1><p>Cycle : Push → Pull → Legs → Repos. Les coches et charges sont sauvegardées sur cet appareil.</p><nav id="nav"></nav><h2 id="heading"></h2><div id="list"></div><div class="actions"><button onclick="finish()">✓ Terminer et enregistrer la séance</button><button onclick="next()">Jour suivant →</button><button onclick="exportData()">Exporter mes données</button></div><h2>Historique des séances</h2><div id="history"></div><p class="hint">Les données restent dans le navigateur de cet appareil. Ne supprime pas les données du navigateur sans exporter ton suivi. Pour voir des exemples de machines, touche le nom d'un exercice : une recherche d'images s'ouvrira.</p><script>
 const days=[['PUSH',[['Développé couché convergent','3 × 8','converging chest press machine'],['Développé incliné Smith','2 × 8 + 1 × (8+12)','incline smith bench press'],['Développé couché droit guidé','2 × 8 + 1 × (8+12)','flat smith bench press'],['Pec Deck / Butterfly','2 × 8 + 1 × (8+12)','pec deck machine'],['Développé militaire','2 × 8 + 1 × (8+12)','shoulder press machine'],['Élévations latérales','2 × 8 + 1 × (8+12)','lateral raise machine'],['Extension triceps poulie','2 × 8 + 1 × (8+12)','triceps cable pushdown'],['Extension triceps au-dessus de la tête','2 × 8 + 1 × (8+12)','overhead cable triceps extension'],['Extension triceps unilatérale','2 × 8 + 1 × (8+12)','single arm cable triceps extension']]],['PULL',[['Pull-over à la poulie','3 × 8–12','straight arm cable pullover'],['Tirage horizontal','2 × 8 + 1 × (8+12)','seated cable row machine'],['Tirage vertical','2 × 8 + 1 × (8+12)','lat pulldown machine'],['Tirage à 30°','2 × 8 + 1 × (8+12)','incline bench cable row'],['Oiseau machine','2 × 8 + 1 × (8+12)','reverse pec deck machine'],['Curl pupitre','2 × 8 + 1 × (8+12)','preacher curl machine'],['Curl incliné','2 × 8 + 1 × (8+12)','incline dumbbell curl'],['Curl marteau','2 × 8 + 1 × (8+12)','hammer curl dumbbell']]],['LEGS',[['Presse à cuisses','2 × 8 + 1 × (8+12)','45 degree leg press machine'],['Leg Extension','2 × 8 + 1 × (8+12)','leg extension machine'],['Leg Curl','2 × 8 + 1 × (8+12)','seated leg curl machine'],['Adducteurs','2 × 8 + 1 × (8+12)','hip adductor machine'],['Hack Squat / Axe Squat','2 × 8 + 1 × (8+12)','hack squat machine'],['Mollets à la machine','3 × 10–15','calf raise machine']]],['REPOS',[]]];
 let state=JSON.parse(localStorage.getItem('ppl-v1')||'{"day":0,"drafts":{},"history":[]}');function save(){localStorage.setItem('ppl-v1',JSON.stringify(state))}function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function render(){document.getElementById('nav').innerHTML=days.map((d,i)=>`<button class="${i===state.day?'active':''}" onclick="choose(${i})">${d[0]}</button>`).join('');document.getElementById('heading').textContent=days[state.day][0];let draft=state.drafts[state.day]||{};document.getElementById('list').innerHTML=state.day===3?'<p>Repos, marche légère, mobilité et récupération.</p>':days[state.day][1].map((e,i)=>`<div class="exercise"><a class="thumb" href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(e[2])}" target="_blank" rel="noopener" aria-label="Voir la machine">🏋️</a><label><a href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(e[2])}" target="_blank" rel="noopener">${esc(e[0])}</a><small>${esc(e[1])}</small><small>Charge (kg) : <input type="number" inputmode="decimal" step="0.5" value="${esc(draft[i]?.weight||'')}" onchange="update(${i},'weight',this.value)"></small></label><input aria-label="Exercice terminé" type="checkbox" ${draft[i]?.done?'checked':''} onchange="update(${i},'done',this.checked)"></div>`).join('');document.getElementById('history').innerHTML=state.history.length?state.history.slice().reverse().map(h=>`<div><strong>${esc(h.day)}</strong> — ${new Date(h.date).toLocaleString('fr-FR')} · ${h.completed}/${h.total} exercices</div>`).join(''):'<p>Aucune séance enregistrée.</p>'}function choose(i){state.day=i;save();render()}function update(i,k,v){let d=state.drafts[state.day]||{};d[i]={...(d[i]||{}),[k]:v};state.drafts[state.day]=d;save()}function finish(){let d=state.drafts[state.day]||{};let entries=days[state.day][1].map((e,i)=>({name:e[0],sets:e[1],...(d[i]||{})}));state.history.push({day:days[state.day][0],date:new Date().toISOString(),completed:entries.filter(e=>e.done).length,total:entries.length,exercises:entries});delete state.drafts[state.day];state.day=(state.day+1)%4;save();render();alert('Séance enregistrée dans ton historique !')}function next(){state.day=(state.day+1)%4;save();render()}function exportData(){let blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='sauvegarde-programme-ppl.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}render();
+
+const exercisePhotos = [
+  [
+    "Machine_Chest_Press",
+    "Smith_Machine_Incline_Bench_Press",
+    "Smith_Machine_Bench_Press",
+    "Butterfly",
+    "Machine_Shoulder_(Military)_Press",
+    "Side_Lateral_Raise",
+    "Triceps_Pushdown",
+    "Cable_Rope_Overhead_Triceps_Extension",
+    "Reverse_Grip_Triceps_Pushdown"
+  ],
+  [
+    "Straight-Arm_Pulldown",
+    "Seated_Cable_Rows",
+    "Wide-Grip_Lat_Pulldown",
+    "Incline_Bench_Pull",
+    "Reverse_Machine_Flyes",
+    "Preacher_Curl",
+    "Incline_Dumbbell_Curl",
+    "Hammer_Curls"
+  ],
+  [
+    "Leg_Press",
+    "Leg_Extensions",
+    "Seated_Leg_Curl",
+    "Thigh_Adductor",
+    "Hack_Squat",
+    "Standing_Calf_Raises"
+  ]
+];
+
+const renderOriginal = render;
+
+render = function() {
+  renderOriginal();
+
+  document.querySelectorAll(".exercise").forEach((card, i) => {
+    const thumb = card.querySelector(".thumb");
+    if (!thumb) return;
+
+    const file = exercisePhotos[state.day]?.[i];
+    if (!file) return;
+
+    const img = document.createElement("img");
+    img.src =
+      "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/"
+      + encodeURIComponent(file) + "/0.jpg";
+
+    img.alt = days[state.day][1][i][0];
+    img.loading = "lazy";
+    img.style.cssText =
+      "width:100%;height:100%;object-fit:cover;border-radius:8px";
+
+    img.onerror = () => {
+      img.remove();
+      thumb.textContent = "🏋️";
+    };
+
+    thumb.textContent = "";
+    thumb.appendChild(img);
+  });
+};
+
+render();
+
 </script></body></html>
